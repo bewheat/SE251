@@ -34,9 +34,28 @@
 
             var newArray = []
 
-            for (i = 0; i < 100; i++)
+            for (i = 1; i <= 100; i++)
             {
-                newArray[newArray.length] = i + 1
+                if((i % 2 === 0) && (i % 3 === 0))
+                {
+                    newArray[newArray.length] = "fizz buzz"
+                }
+
+                else if(i % 2 === 0)
+                {
+                    newArray[newArray.length] = "fizz"
+                }
+
+                else if(i % 3 === 0)
+                {
+                    newArray[newArray.length] = "buzz"
+                }
+
+                else
+                {
+                    newArray[newArray.length] = i
+                }
+                
             }
 
             console.log(newArray)
