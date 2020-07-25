@@ -36,24 +36,26 @@
 
             for (i = 1; i <= 100; i++)
             {
+
+                   
                 if((i % 2 === 0) && (i % 3 === 0))
                 {
-                    newArray[newArray.length] = "fizz buzz"
+                    newArray[newArray.length] = {index: i, label: "fizz buzz"}
                 }
 
                 else if(i % 2 === 0)
                 {
-                    newArray[newArray.length] = "fizz"
+                    newArray[newArray.length] = {index: i, label: "fizz"}
                 }
 
                 else if(i % 3 === 0)
                 {
-                    newArray[newArray.length] = "buzz"
+                    newArray[newArray.length] = {index: i, label: "buzz"}
                 }
 
                 else
                 {
-                    newArray[newArray.length] = i
+                    newArray[newArray.length] = {index: i}
                 }
                 
             }
