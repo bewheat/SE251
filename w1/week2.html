@@ -1,0 +1,82 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Week 2 Files</title>
+		<style type="text/css">
+			.border{border:1px solid black;}
+		</style>
+	</head>
+
+	<body>
+
+
+	</body>
+
+	<script type="text/javascript">
+		//Use this Array of objects to complete the assignment.
+		var people =[
+			{first:"Jason", last:"Vorhees", credit:"Friday the 13th"},
+			{first:"Freddy", last:"Krueger", credit:"A Nightmare on Elm Street" },
+			{first:"Roger", last:"Rabbit", credit:"Who Framed Roger Rabbit" },
+			{first:"Kevin", last:"McCallister", credit:"Home Alone" },
+			{first:"Godzilla", last:"King of The Monsters", credit:"Godzilla" },
+			{first:"Buzz", last:"Lightyear", credit:"Toy Story" },
+			{first:"Marion", last:"Cobretti", credit:"Cobra" }
+		]
+	
+		for (i = 0; i < people.length; i++)
+		{
+			//create a temporary variable to hold div in
+			var tempDiv = document.createElement("div")
+
+			//create <p>
+			var p1 = document.createElement("p")
+			var p2 = document.createElement("p")
+			var p3 = document.createElement("p")
+
+			//create text
+			var p1Text = document.createTextNode(people[i].first)
+			var p2Text = document.createTextNode(people[i].last)
+			var p3Text = document.createTextNode(people[i].credit)
+
+			//append text to <p>
+			p1.appendChild(p1Text)
+			p2.appendChild(p2Text)
+			p3.appendChild(p3Text)
+
+			//append <p> to div
+			tempDiv.appendChild(p1)
+			tempDiv.appendChild(p2)
+			tempDiv.appendChild(p3)
+
+			//append div to page
+			document.body.appendChild(tempDiv)
+
+			//add class to div
+			tempDiv.className = "border"
+
+			//add id to div
+			tempDiv.setAttribute("id", String(i))
+
+			/*add border class to div
+			tempDiv.class="border"
+
+			//add id to div
+			tempDiv.setAttribute(id, i)
+
+			/*add p tag to div
+			var tempP = document.tempDiv.CreateElement("p")
+
+			//add info from the array to the paragraph tag
+			tempP.innerHTML = 
+			
+
+			tempDiv.innerHTML = "<p>" + people[i].first + "<p>"
+			tempDiv.innerHTML = "<p>" + people[i].last + "<p>"
+			tempDiv.innerHTML = "<p>" + people[i].credit + "<p>"
+				*/
+		}
+	</script>
+
+</html>
