@@ -1,0 +1,671 @@
+
+	(function(){
+
+        $NEIT = {
+		/*
+			Announcements will be added to the home page with the following rules:
+				- The page must be a Course Home page ("A Page Designed By Me" option)
+				- The page must contain the following HTML:
+					     <div id="courseAnnouncementWidget"></div>
+				- The Canvas CSS should include something like the following:
+					#courseAnnouncementWidget {
+						float: right;
+						width: 330px;
+						border: 1px solid lightgray;
+						min-height: 800px;
+						padding: 0 2px 0 4px;
+					}
+				- By default, seven announcments will be pulled from the main feed. This
+				   is currently hardcoded into the script.
+
+		*/
+		announcementInfo : function(u){
+			//if this is a course page, assemble the API call and call it
+			var annurl;
+			if (this.courseID && ENV && ENV.current_user_id) {
+				if (u) {
+					annurl = u;
+				}else{
+					annurl = "/api/v1/courses/" + this.courseID + "/discussion_topics?only_announcements=true";
+				}
+				console.log("feed url is  "+annurl);
+				$.get(annurl, this.displayAnnouncementInfo);
+			}
+		},
+		annUnreadCount : 0,
+		annList : [],
+
+		// formats the Announcement into HTM, adds unread number to Left nav
+		displayAnnouncementInfo : function(j, status, req){
+			console.log("displayWidget callback");
+			//first count the unread items and update the Announcment menu item
+			var unread_count = 0;
+			$.each(j, function(i, item) {
+				$NEIT.annList.push(item);
+				if (item && item.read_state && item.read_state == "unread") {
+					$NEIT.annUnreadCount++;
+				}
+			});
+			var pages = req.getResponseHeader("link");
+			if (pages) {
+				var links = $NEIT.parse_link_header(pages);
+				var next = links["next"];
+				if (next) {
+					$NEIT.announcementInfo(next);
+					return;
+				}
+			}
+			if ($NEIT.annUnreadCount) {
+				$('li.section a.announcements').append('<span id="annUnreadCount" title="Unread Announcements">'+$NEIT.annUnreadCount+'</span>')
+			}
+			//then see if this is a home page and do the widget assembly
+			console.log("Checking if this is a home page");
+			var el = $('#course_home_content');
+			if (el.length || (ENV.WIKI_PAGE && ENV.WIKI_PAGE.front_page)){
+				console.log("This is a home page");
+				// is there a annuouncements div on the page?
+				var annEl = $('#courseAnnouncementWidget');
+				var annEl2 =  ENV.WIKI_PAGE ? $(ENV.WIKI_PAGE.body).siblings('#courseAnnouncementWidget') : '';
+				if (!annEl.length){
+					annEl = annEl2;
+				}
+				if (annEl.length == 0){
+					console.log("No widget called for");
+					return;
+				}
+
+				var annEl = $('#courseAnnouncementWidget');
+				var annEl2 = ENV.WIKI_PAGE ? $(ENV.WIKI_PAGE.body).siblings('#courseAnnouncementWidget') : document.createElement('div');
+				if (!annEl.length){
+					annEl = annEl2;
+				}
+				var announcements = [];
+				annEl.append("<div class='annWTitle'>Course Announcements</div>");
+				$.each($NEIT.annList, function(i, item) {
+					announcements.push({
+						title: item.title,
+						link: item.html_url,
+						description: item.message,
+						pubDate: new Date(item.delayed_post_at) > new Date(item.posted_at) ? new Date(item.delayed_post_at) : new Date(item.posted_at),
+						//delayedDate: new Date(item.delayed_post_at),
+						author: item.author.display_name
+					});
+				}); // .each
+				announcements.sort(function( a, b ) {
+					var aDate = a.pubDate.getTime(), bDate = b.pubDate.getTime();
+					return aDate < bDate ? 1 : (aDate > bDate ? -1 : 0);
+				});
+				var count=0;
+				announcements.forEach(function(el, i){
+					var d = new Date(el.pubDate);
+					if (d <= new Date() && count<=5) {
+						var dateStr = d.toLocaleString().replace(/:\d{2}\s/,' ');
+						annEl.append("<div class='annItem'><div class='annWTitle'><a href='"+announcements[i].link+"'>"+announcements[i].title+"</a></div><div class='annTimestamp'>"+dateStr+"</div><div class='annBody'>"+announcements[i].description+"</div></div>");
+						count++;
+					}
+				});
+				annEl.append("<div id='allAnnLink'><A href='/courses/"+$NEIT.courseID+"/announcements'>All announcements...</a></div>");
+			}
+
+		},	// displayAnnouncementInfo
+
+		announcementWidget : function(){
+			//is this a home page?
+			var el = $('#course_home_content');
+			console.log("Checking if this is a home page");
+			if (el.length || (ENV.WIKI_PAGE && ENV.WIKI_PAGE.front_page)){
+				console.log("This is a home page - calling getAnnouncements");
+				// is there a annuouncements div on the page?
+				var annEl = $('#courseAnnouncementWidget');
+				var annEl2 =  ENV.WIKI_PAGE ? $(ENV.WIKI_PAGE.body + 'div#courseAnnouncementWidget') : '';
+				if (!annEl.length){
+					annEl = annEl2;
+				}
+				if (annEl.length == 0){
+					console.log("No widget called for");
+					return;
+				}
+
+				var annurl = "/api/v1/courses/" + this.courseID + "/discussion_topics?only_announcements=true";
+				$NEIT.annurl = annurl;
+				console.log("feed url is  "+annurl);
+				$.get(annurl, this.displayAnnouncementWidget);
+				//$.getJSON("/api/v1/courses/" + this.courseID + "/activity_stream/summary",this.displayActivitySummary);
+			}
+		},
+
+		annurl : '',
+
+
+			// formats the Announcement into HTML
+		displayAnnouncementWidget : function(j){
+			console.log("displayWidget callback");
+			var annEl = $('#courseAnnouncementWidget');
+			var annEl2 = ENV.WIKI_PAGE ? $(ENV.WIKI_PAGE.body).siblings('#courseAnnouncementWidget') : document.createElement('div');
+			if (!annEl.length){
+				annEl = annEl2;
+			}
+			var i=-1;
+			var announcements = [];
+			annEl.html('');
+			annEl.append("<div class='annWTitle'>Course Announcements</div>");
+			if (j.length == 0) {
+				annEl.append("<div class='noAnnouncements'>There are currently no course announcements</div>");
+			}
+			$.each(j, function(i, item) {
+				announcements.push({
+					title: item.title,
+					link: item.html_url,
+					description: item.message,
+					pubDate: new Date(item.posted_at),
+					author: item.author.display_name
+				});
+			}); // .each
+			announcements.sort(function( a, b ) {
+				var aDate = a.pubDate.getTime(), bDate = b.pubDate.getTime();
+				return aDate < bDate ? 1 : (aDate > bDate ? -1 : 0);
+			});
+			announcements.forEach(function(){
+				if (i++<=5){
+					var d = new Date(announcements[i].pubDate);
+					var dateStr = d.toLocaleString().replace(/:\d{2}\s/,' ');
+					annEl.append("<div class='annItem'><div class='annWTitle'><a href='"+announcements[i].link+"'>"+announcements[i].title+"</a></div><div class='annTimestamp'>"+dateStr+"</div><div class='annBody'>"+announcements[i].description+"</div></div>");
+				}
+			});
+			annEl.append("<div id='allAnnLink'><A href='/courses/"+$NEIT.courseID+"/announcements'>All announcements...</a></div>");
+		},
+
+		getTitle : function(){
+			$.getJSON("/api/v1/courses/" + this.courseID, function(data){
+				data.name ? $('#breadcrumbs>ul').append("<li id='breadcrumbCoursename'>"+data.name+"</li>") : '';
+			});
+		},
+
+		termweek : '',
+		
+		termWeekFeatures : function(){
+			$.ajax({
+				type:  'GET',
+				url :  "https://technet.neit.edu/cfincludes/semesterweek.txt",
+				dataType: 'jsonp',
+				jsonp : 'false',
+				jsonpCallback : 'jsonp',
+				success : function(data){
+					var s = data.termweek;
+					if (s) {
+						if (/\d/.test(s)) {
+                            //this has digits in it, so it must be a week number, not a break week
+							// parse the parts and add line breaks
+							var strs = s.split(":");
+							s = strs[0] + "<br>" + strs[1];
+                        }
+                        $NEIT.termweek = s;
+						// now do termweek in sidebar
+						$('div.ic-app-header__logomark-container').after("<div class='menu-item__text' style='text-align:center'>"+$NEIT.termweek+"</div>");
+
+						// now do homepage feeature
+						if ($("body").attr("class").match(/\bcontext-course_(.[0-9]*)/)) {
+							var courseID = $("body").attr("class").match(/\bcontext-course_(.[0-9]*)/)[1];
+							var fC = $('#featuredContent');
+							var fC2 = ENV.WIKI_PAGE ? $(ENV.WIKI_PAGE.body).siblings('#featuredContent') : '';
+							if (fC.length == 0) fC = fC2;
+							if (fC.length > 0){
+								//get the week
+								var week = parseInt(fC[0].innerHTML);
+								if (week) {
+									$NEIT.getFeatureContent(week);
+								}else{
+									var weekNum;
+									var match = s.match(/Week\s(\d+)/);
+									if (match && match[1]) {
+										weekNum = match[1];
+									}
+									if (weekNum){
+										week = weekNum;
+									}else{
+										week = "break";
+									}
+									if (week){
+										$NEIT.getFeatureContent(week);
+									}
+								}
+									
+							}
+						}
+					}
+				},
+				error : function(jq, status, err){
+					console.log(status + ":" +err)
+				}
+			});	
+		},
+		
+		homepageFeature : function(){
+			/*
+				Looks for a div with id=featuredContent in the page. If found.
+				extracts a number from that div, and then looks for a Page within the
+				course named featureweekn, where n is the number extracted from the div.
+				The content of that page is inserted into the DIV in place of the number.
+
+				If the DIV does not contain a number, the number will be drawn from
+				the Week # that drives the term/week banner image. This means that
+				the content box will update automatically each week.
+t
+			*/
+			
+			//week bases tuff - call ajax once and then test for this and for the siddebar image
+			if ($("body").attr("class").match(/\bcontext-course_(.[0-9]*)/)) {
+				var courseID = $("body").attr("class").match(/\bcontext-course_(.[0-9]*)/)[1];
+				var fC = $('#featuredContent');
+				var fC2 = ENV.WIKI_PAGE ? $(ENV.WIKI_PAGE.body).siblings('#featuredContent') : '';
+				if (fC.length == 0) fC = fC2;
+				if (fC.length > 0){
+					//get the week
+					var week = parseInt(fC[0].innerHTML);
+					if (week) {
+						$NEIT.getFeatureContent(week);
+					}else{
+						$.ajax({
+							type:  'GET',
+							url :  "https://technet.neit.edu/cfincludes/semesterweek.txt",
+							dataType: 'jsonp',
+							jsonp : 'false',
+							jsonpCallback : 'jsonp',
+							success : function(data){
+								var s = data.termweek;
+								if (s) {
+									var weekNum;
+									var match = s.match(/Week\s(\d+)/);
+									if (match && match[1]) {
+										weekNum = match[1];
+									}
+									if (weekNum){
+										week = weekNum;
+									}else{
+										week = "break";
+									}
+									if (week){
+										$NEIT.getFeatureContent(week);
+									}
+								}				
+							},
+							error : function(jq, status, err){
+								console.log(status + ":" +err)
+							}
+						});						
+					}
+				}
+			}
+		},
+
+		getFeatureContent : function(week){
+				$.getJSON("/api/v1/courses/" + $NEIT.courseID + "/pages/featureweek" + week, function (data) {
+					if (data.body) {
+						$(" div#featuredContent").html(data.body);
+					}
+				}).fail();
+			//}
+		},
+
+		/* The Delete Course link is removed from the Course Admin page by default.
+		 *  This function makes it show it for Admins only.
+		*/
+		showCourseDelete : function(){
+			if (ENV.current_user_roles && ENV.current_user_roles.indexOf("admin")!=-1){
+				if ($('a.delete_course_link').length){
+					$('a.delete_course_link')[0].style.cssText = 'display:inline !important';
+				}
+			}
+		},
+
+		addAttendanceLink : function(){
+			if (ENV.current_user_roles && (ENV.current_user_roles.indexOf("teacher")!=-1 || ENV.current_user_roles.indexOf("admin")!=-1)) {
+				$(" div#left-side nav ul#section-tabs")
+				.append("<li class='section added attendancelink'><a href='https://ats.neit.edu/technet_xfer_ats.asp' target='_new'>NEIT Attendance</a></li>");
+				}
+		},
+
+		kalturaDetect : function(){
+			vid = $('td a[href*="osv-kaltura-bb"]');
+			if (!vid.length) {
+				vid = ENV.WIKI_PAGE ? $(ENV.WIKI_PAGE.body).find('td a[href*="osv-kaltura-bb"]') : document.createElement('div');
+			}
+			if (vid.length) {
+				setTimeout($NEIT.kalturaMashupClick, 200);
+			}
+		},
+		vid : '',
+		kalturaMashupClick : function(){
+			if ($('td a[href*="osv-kaltura-bb"]').length || $('div#wiki_body').length || $('div#wiki_page_show div.show-content').length) {
+				$('td a[href*="osv-kaltura-bb"]').click(function(e){
+					//alert("HI");
+					e.preventDefault();
+					var id = $(this).attr('href');
+					id = id.match(/entry_id=(.*)/)[1];
+					var embed = '<iframe src="https://cdnapisec.kaltura.com/p/1282741/sp/128274100/embedIframeJs/uiconf_id/23874972/partner_id/1282741?iframeembed=true&playerId=kaltura_player_1399319074&entry_id='+id+'&flashvars[streamerType]=auto" width="400" height="333" allowfullscreen="true" webkitallowfullscreen="true" mozAllowFullScreen="true" frameborder="0"></iframe>';
+					//$(this).parents('table').first().append(embed)
+					$(this).replaceWith(embed);
+					}).parents('table').before(function(){
+						if (ENV.current_user_roles && (ENV.current_user_roles.indexOf("teacher")!=-1 || ENV.current_user_roles.indexOf("admin")!=-1)) {
+							return "<div class='kalturaWarning'>NOTE: This video uses the Blackboard/Kaltura method of embedding. This will work for the time being, but will stop working \
+							eventually (date TBD, after Fall 2014). Please contact the Faculty Resource Center (<a href='mailto:frc@neit.edu'>frc@neit.edu</a> or extension '4FRC') for help in \
+							updating these video links.  (This warning is not visible to your students.)</div>";
+						}else{
+							return '';
+						}
+					});
+			}else{
+				setTimeout($NEIT.kalturaMashupClick, 200);
+			}
+
+			/**/
+		},
+		addTechnetLink : function(){
+			$('div.ic-app-header__logomark-container').after('<div id="technet_menu_item" > \
+				<a href="https://students.neit.edu" class="technet-link" title="Go to Technet (opens in new tab)" target="_new">Technet</a></div>');
+		},
+		relabelHelpMenu : function(){
+			$('#global_nav_help_link').click(function(){
+				onElementRendered('a[href="#create_ticket"]', function(el){
+					$('a[href="#create_ticket"]').html("24/7 Canvas Support (email)");
+					$('a[href="#create_ticket"]').next().html("Get Help via Email");
+				});
+			});
+		},
+		addCourseDirectory : function(){
+			if (ENV.current_user_roles && ENV.current_user_roles.indexOf("admin")!=-1){
+				//$('#calendar_menu_item').after("<li id='mymedia_menu_item' class='menu-item'><a href='https://content.neit.edu/utility/syllabusTracker/#' class='menu-item-no-drop' target='_new'>Course Directory (admin only)</a></li>");
+				$('h2:contains("Find a Course")').append("<span style='padding-left:1em;'><a href='https://content.neit.edu/utility/syllabusTracker/#' class='menu-item-no-drop' target='_new'>NEIT Course Tracker</a></span>");
+			}
+		},
+		loadAudioRecord : function(){
+			/*
+			 * This function makes the Canvas Media Record widget into an audio-only widget (so people
+			 * will use Kaltura for Video by default).  The exceptions are where the Canvas media record widget
+			 * is the only option (no Kaltura), such as within the commenting of SpeedGrader and for
+			 * an assignment with submission type 'media'.
+			 **/
+
+			onElementRendered('div#mceu_23',function(el){
+				// relabel title popup from 'Record/Uplaod Media' to 'Record Audio'
+				el.attr("aria-label", "Record Audio");
+				// Change icon from the little filmstrip to a microphone
+				el.find('i.mce-ico').css('background-image',"url('https://content.neit.edu/css/images/audio-input-microphone-2.png')");
+			});
+
+			if (ENV && ENV.CONTEXT_ACTION_SOURCE && ENV.CONTEXT_ACTION_SOURCE !== 'speed_grader')  {
+				var speedGrader = true;
+			}
+			if (ENV && ENV.SUBMIT_ASSIGNMENT)  {
+				var submitAssignment = true;
+			}
+			// If this is not speedgrader or assignment, then this must have come from the rich text editor,
+			//  which does have Kaltura available, so remove the video and file upload parts of the canvas
+			//  media tool.
+			if (!speedGrader && !submitAssignment) {
+				// hide the video record option
+				onElementRendered('a#video_record_option',function(el){
+					el.addClass('hideImportant');
+				});
+				// hide the media upload option
+				onElementRendered("li[aria-controls='upload_media_tab']",function(el){
+					el.addClass('hideImportant');
+					// and relabel the Record Media tab to Record Audio
+					$("li[aria-controls='record_media_tab'] a").text("Record Audio");
+				});
+			}
+		},
+		/*  Function to add Google Analytics to certain courses. 
+		 *  */
+		addAnalytics : function(){
+			var courseids = ["15559", "20944","25848"];
+			if ($.inArray($NEIT.courseID, courseids) != -1 ) {
+				    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+					(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+					m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+					})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+					ga('create', 'UA-39381782-4', 'auto');
+					ga('require', 'displayfeatures');
+					ga('send', 'pageview');
+					}
+		},
+		dashboardTwitter : function(){
+				$('#dashboard').append('<div class="dashboardTwitter"><a class="twitter-timeline"  \
+						href="https://twitter.com/NEInstituteTech" data-widget-id="502503689311887360" width="350" height="500">Tweets by @NEInstituteTech</a>  \
+						<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?"http":"https";  \
+						if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script></div>');
+
+				if (ENV && ENV.current_user_roles && (ENV.current_user_roles.indexOf("teacher")!=-1 || ENV.current_user_roles.indexOf("admin")!=-1)) {
+						$('#dashboard').append('<div class="dashboardTwitter"><a class="twitter-timeline" href="https://twitter.com/Canvas4Faculty" data-widget-id="502812462253486081" width="350" height="500">Tweets by @Canvas4Faculty</a>  \
+							<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?"http":"https";  \
+							if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script></div>');
+				}
+		},
+		loadPrism : function(){
+				// load prism
+				$("head").append($("<link/>", { rel: "stylesheet", href: "https://content.neit.edu/css/prism/prism.css"}));
+
+				// Load tools js
+				$.getScript("https://content.neit.edu/css/prism/prism.js", function () {
+						console.log("prism script loaded");
+						onElementRendered('#wiki_page_show div.show-content', function(el){
+								Prism.highlightAll();  //highlightElement($('#wiki_page_show div.show-content')[0]);
+						});
+						onElementRendered('div.user_content', function(el){
+								Prism.highlightAll();  //highlightElement($('#wiki_page_show div.show-content')[0]);
+						});
+				});
+		},
+		iFrameFullscreen : function(){
+			onElementRendered('iframe', function(el){
+				$('iframe').attr("webkitallowfullscreen","true").attr("allowFullScreen","true").attr("mozallowfullscreen","true");
+				}, 4);
+			onElementRendered('#wiki_page_show div.show-content',function(el){
+				$('iframe').attr("webkitallowfullscreen","true").attr("allowFullScreen","true").attr("mozallowfullscreen","true");
+				}, 4);
+			onElementRendered('div.user_content', function(el){
+				$('iframe').attr("webkitallowfullscreen","true").attr("allowFullScreen","true").attr("mozallowfullscreen","true");
+				});
+		},
+		parse_link_header: function(header) {
+			if (header.length == 0) {
+			  throw new Error("input must not be of zero length");
+			}
+
+			// Split parts by comma
+			var parts = header.split(',');
+			var links = {};
+			// Parse each part into a named link
+			$.each(parts, function(i, p) {
+			  var section = p.split(';');
+			  if (section.length != 2) {
+				throw new Error("section could not be split on ';'");
+			  }
+			  var url = section[0].replace(/<(.*)>/, '$1').trim();
+			  var name = section[1].replace(/rel="(.*)"/, '$1').trim();
+			  links[name] = url;
+			});
+
+			return links;
+		  },
+		  groupPageNotice : function(){
+			// set the message
+				var noticeBoxMessage = "You are now in your Group site, which is visible only to your group members and the professor. ";
+				try{
+					var navCourseID  = ENV.DISCUSSION.SEQUENCE.COURSE_ID;
+					if (navCourseID){
+						// insert the noticebox after the breadcrumbs in any page with a body class of "context-group_ ... "
+						$("body[class*='context-group_'] nav#breadcrumbs").append("<div id=noticeBox class=ui-state-highlight><a href=# class='btn btn-primary leave-student-view' id=noticeBoxLink><span id=noticeBoxLinkText>Go back to the course modules page</span></a><span id=noticeBoxText>" + noticeBoxMessage + "</span></div>");
+	
+						// get the course number from the link to the course home page
+						
+						console.log("courseID: " + navCourseID);
+	
+						// take the course number and insert it into the button link
+						$("a#noticeBoxLink").attr("href","/courses/" + navCourseID + "/modules");
+					}
+				}catch(e){
+						// not a group page
+				}
+				// use css at gist.github.com/ctslearning/5859413
+				// result looks like this: pic.kl1p.com/BCjP_43330.jpg
+				// demo at jsfiddle.net/pYnWN/12
+		  },
+
+		checkHold : function(){
+
+			$.ajax({
+			  dataType: "json",
+			  url: "https://students.neit.edu/scheduler/GetStudentHoldStateJSON.cfm",
+			  xhrFields: {
+				withCredentials: true
+			 },
+			  success: function(data){
+				try{
+				  var status = data.success;
+				  if (status) {
+					var hold = data.holdState;
+					if (hold) {
+					  document.location.href = "https://students.neit.edu/index.cfm?pg=7759&pgtitle=Student-Accounts-Hold-";
+					}else{
+					  console.log("no hold");
+					}
+				  }
+				}catch(e){console.log("error in holdstate"+e);}
+			},
+			});
+          },
+
+          /*
+           * Adds a top-level banner to canvas new UI, and inserts the semesterweek image and
+           * user's name into the banner
+           * */
+          addBanner : function(){
+             /*$('#wrapper-container').prepend("<div id='neit_banner'>&nbsp;</div>");
+             var banner = $('#neit_banner');
+             banner.css("height","17px");
+             banner.css("background", "#012749 url('https://technet.neit.edu/images/semesterweek.png') center no-repeat");
+             banner.html("<div id='neitNavLinks'></div><div id='neitUserName'></div>");
+			 */
+			 // add name
+			 $('a#global_nav_profile_link div.menu-item__text').html("Account: " + ENV.current_user.display_name);
+			 
+			// termweek sidebar thing happens in termweekFeatures method
+			
+			// Add technet item to left nav
+			addMenuItem("TechNet","https://students.neit.edu");
+          },
+        } //$NEIT
+        
+		function addMenuItem (linkText, linkhref) {
+			'use strict';
+			var iconHtml = '',
+				itemHtml,
+				linkId = linkText.split(' ').join('_');
+		   
+			itemHtml = '<li class="ic-app-header__menu-list-item tempRemoveClass">' +
+				'  <a id="global_nav_' + linkId + '" target="_blank" href="' + linkhref + '" class="ic-app-header__menu-list-link">' +
+				'  <div class="menu-item-icon-container" aria-hidden="true"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="35px"	 height="35px" viewBox="0 0 28.2 28.3" style="enable-background:new 0 0 28.2 28.3;" xml:space="preserve"><style type="text/css"><![CDATA[	.st0{fill:#192846;}	.st1{fill:#FFFFFF;}]]></style><g id="Layer_2"><rect class="st0" width="28.2" height="27.9"/></g><g id="Layer_1">	<path class="st1" d="M22.5,5.2c-0.1-0.2-3.3-3.8-8.3-3.8C9.2,1.4,6,5,5.9,5.2L5.5,5.6v8.6c0,7.1,7.9,11.3,8.2,11.4l0.4,0.2l0.4-0.2c0.3-0.2,8.2-4.3,8.2-11.4V5.6L22.5,5.2z"/>	<path class="st0" d="M21.4,6.2c-0.1-0.1-2.9-3.3-7.2-3.3C9.8,2.9,7.1,6,7,6.2L6.7,6.5V14c0,6.2,6.8,9.8,7.1,10l0.4,0.2l0.4-0.2		c0.3-0.2,7.1-3.8,7.1-10V6.5L21.4,6.2z"/>	<path class="st1" d="M15.3,20.2c0,0,3.6-1.4,3.9-4.3c0,0,0.1-1.8-2-4.1l-2.6-3.9c0,0-1.1-1.7,0.3-3.2c0,0-2.4,2.6-2.6,4.2		c0,0-0.1,0.7,0.4,1.6l2.8,4.3c0,0,0.8,1.5,0.7,2.5c0,0-0.3,2.2-2.3,3.1C14,20.5,15.2,20.3,15.3,20.2z"/>	<path class="st1" d="M14,18.9c0,0,1.6-1,0.5-2.8l-2.6-3.8c0,0-0.7-1-0.3-2.4c0,0-1.3,1.5-0.7,3.3c0,0,0.7,1.3,1.1,1.8		c0,0,1.6,2,1.8,2.3C13.8,17.3,14.2,18.2,14,18.9z"/>	<path class="st1" d="M13,20.4c0,0,0.3-1.8-1.1-3.3c0,0-1.6-2.1-1.8-2.6c0,0-0.6-1.4-0.3-2.2c0,0-1.3,1.4-0.8,2.9		c0.5,1.5,1.2,2,1.6,2.5C11,18.2,12.3,19.1,13,20.4z"/></g></svg><span class="menu-item__badge" style="display: none">0</span></div>' +
+				'       <div class="menu-item__text">'  + linkText + '</div>' +
+				'  </a>' +
+				'</li>';
+			$('#menu').append(itemHtml);
+		}
+ 
+		
+      function onElementRendered(selector, cb, _attempts) {
+          var el = $(selector);
+          _attempts = ++_attempts || 1;
+          if (el.length) return cb(el);
+          if (_attempts == 30) return;
+          setTimeout(function() {
+            onElementRendered(selector, cb, _attempts);
+          }, 250);
+      }
+        	// Check for TinyMCE editor and Load Tools
+    function editorExistenceCheck(iframeID) {
+        var editorExists = false;
+        if ($(iframeID).contents().find('#tinymce').length > 0 || $(iframeID).contents().find('#tinyrce').length > 0) {
+            editorExists = true;
+        }
+        if (editorExists === true) {
+            setTimeout(function () {
+                addEditorCSS(iframeID);
+            }, 300);
+            return;
+        }
+        setTimeout(function () {
+            editorExistenceCheck(iframeID);
+        }, 300);
+    }
+	function addEditorCSS(iframeID){
+		var $head = $(iframeID).contents().find('head');
+		var timestamp =  +(new Date());
+		$head.append($('<link/>', { rel: 'stylesheet', href: 'https://content.neit.edu/css/tinymce_addon.css?'+timestamp, type: 'text/css' }));
+		if ($.browser.mozilla) { //$.browser.mozilla
+			// dynamic styles won't load in ff
+			// insert styles verbatiim instead
+			var d = $(iframeID)[0].contentDocument;
+			var s = d.createElement("style");
+			s.setAttribute("type","text/css");
+			var t = d.createTextNode("#homeSidebarNav{float:left;width:200px;padding-top:0;border:1px solid gray}#homeSidebarNav img{width:95%}#courseAnnouncementWidget,#featuredContent{border:1px solid #d3d3d3;padding:4px;margin-bottom:1em;margin-left:210px;height:150px;background-color:lightyellow;}#featuredContent{background: url('https://content.neit.edu/css/images/featuredContent.png') 110 20 no-repeat lightyellow;}#courseAnnouncementWidget{background: url('https://content.neit.edu/css/images/announcements.png') 110 40 no-repeat lightyellow;}");
+			s.appendChild(t);
+			$head.append(s);
+
+		}
+	}
+
+
+
+
+	$(document).ready(function(){
+		try{
+			$NEIT.courseID = $("body").attr("class").match(/\bcontext-course_(.[0-9]*)/)[1];
+		} catch(e) {
+			$NEIT.courseID='';
+		}
+		$NEIT.termWeekFeatures();
+		$NEIT.addBanner();
+		$NEIT.checkHold();
+		$NEIT.getTitle();
+		$NEIT.showCourseDelete();
+		$NEIT.announcementInfo();
+		//$NEIT.homepageFeature();
+		$NEIT.addAttendanceLink();
+		$NEIT.kalturaDetect();
+		//$NEIT.addTechnetLink();
+		$NEIT.addCourseDirectory();
+		$NEIT.relabelHelpMenu();
+		$NEIT.addAnalytics();
+		$NEIT.loadAudioRecord();
+		$NEIT.dashboardTwitter();
+		$NEIT.loadPrism();
+		$NEIT.groupPageNotice();
+		$NEIT.iFrameFullscreen();//appears to have been fixed by Canvas as of 11/14/2014 - apparently no longer need this
+		//allow password reset for one user]]
+		if (ENV && ENV.current_user_id && ENV.current_user_id == 1189) {
+			$('#update_profile_form tr.select_change_password_row').addClass("showImportant");
+		}
+		onElementRendered('div.neitAccordion', function(){$('div.neitAccordion').accordion({ heightStyle: "content"});});
+		onElementRendered('div.tabs', function(){$("div.tabs").tabs();});
+
+		$('#section-tabs .modules').html('Course Modules');
+		$('.context_external_tool_30').attr("target", "_new");
+		$('.context_external_tool_30').attr("href", "https://library.neit.edu");
+
+		var iframeID = '#editor_box_unique_id_1_ifr';
+		editorExistenceCheck(iframeID);
+		var iframeAsgnID = '#assignment_description_ifr';
+		editorExistenceCheck(iframeAsgnID);
+		var iframeDiscID = '#discussion-topic-message12_ifr';
+		editorExistenceCheck(iframeDiscID);
+		var iframeDiscID9 = '#discussion-topic-message9_ifr';
+		editorExistenceCheck(iframeDiscID9);
+		var iframeDiscID10 = '#discussion-topic-message10_ifr';
+		editorExistenceCheck(iframeDiscID10);
+		var iframeDiscID11 = '#wiki_page_body_ifr';
+		editorExistenceCheck(iframeDiscID11);
+	});
+
+  })();

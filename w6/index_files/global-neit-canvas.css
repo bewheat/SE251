@@ -1,0 +1,465 @@
+/* Global NEIT CSS for Canvas */
+
+
+#homeSidebarNav{
+	/*float:left;
+	width:150px;*/
+	padding-top: 0em;
+	padding-bottom: 1em;
+	margin: 0 0 auto;
+	text-align: center;
+}
+#homeSidebarNav img{
+	/*width: 95%;*/
+	padding-left: 10px;
+	height: 100px;
+	width: 100px;
+}
+div#homeSidebarNav p {
+    display: inline;
+}
+#courseAnnouncementWidget, #featuredContent{
+
+	border: 1px solid lightgray;
+	padding: 4px;
+	margin-bottom: 1em;
+	/*margin-left:155px;*/
+	clear:both;
+}
+#annUnreadCount{
+	float:right;
+    background: #40458F;
+  border-radius: 0.8em;
+  -moz-border-radius: 0.8em;
+  -webkit-border-radius: 0.8em;
+  color: #ffffff;
+  display: inline-block;
+  font-weight: normal;
+  line-height: 1.6em;
+  margin-top: 3px;
+  text-align: center;
+  width: 1.6em;
+  font-size: 75%;
+}
+.annItem{
+	border-bottom: 1px solid #ccc;
+	margin-bottom: 7px;
+}
+.annWTitle{
+	font-weight:bold;
+}
+.annTimestamp {
+	font-size: 86%;
+	color: #999;
+	margin-left: 6px;
+}
+.annBody{
+	margin-left: 6px;
+	margin-top: 6px;
+}
+.noAnnouncements{
+	margin-left:6px;
+}
+#allAnnLink{
+	margin-left: 1em;
+}
+
+/*  GROUP PAGE NOTICE:  */
+/* add this to your custom stylesheet */
+#noticeBox {min-height:30px; padding:10px}
+#noticeBox #noticeBoxLink {color:white; float:right; margin:0 10px; padding:5px 10px; }
+#noticeBox #noticeBoxText {display:block; margin-top:5px}
+#noticeBox #noticeBoxLinkMore {text-decoration:underline}
+
+
+/* for js at gist.github.com/ctslearning/5859393 */
+
+/* END GROUP PAGE NOTICE */
+
+/* BOLD THE MODULES LINK ON THE LEFT
+#section-tabs .modules {
+color: rgb(253, 194, 8);
+font-weight: bold;
+background-color: #413838;
+}*/
+
+/* LEFT NAV STUFF */
+
+.ic-app-header__main-navigation .menu-item__text{
+	white-space: normal;
+}
+
+
+/* END LEFT NAV STUFF */
+
+
+/* Remove the points possible column from the modules page. Don't wnat students deciding what to do or skip based on points.
+For example, an ungraded Icebreaker forum is not intended to be optional.  */
+.points_possible_display{
+	display:none !important;
+}
+
+/* Remove the Delete Course Course Links from the Course Admin page available to faculty
+	We override this in the global Javascript so that the link shows for admins*/
+a.delete_course_link {
+	display:none !important;
+}
+
+/* Remove the Conclude Course link on Course Settings page */
+a[href*="event=conclude"] {
+	display:none !important;
+}
+
+/* remove the Change Password item and Delete User on users Settings page */
+#update_profile_form tr.select_change_password_row {
+	display:none ;
+}
+#update_profile_form tr.edit_data_row a.admin {
+	display:none !important;
+}
+.showImportant{display:inline !important;}
+
+ /* Replace the gray background with something that matches your colors.  You can use .pngs with alpha transparency. If you don't use an image, you need to remove ours*/
+ /* Replace the gray background with something that matches your colors.  You can use .pngs with alpha transparency. If you don't use an image, you need to remove ours*/
+
+/*  Style the Course Title in the breadcrumbs area, added by global JS */
+nav#breadcrumbs ul:first-child {
+	/*float: left;*/
+}
+#breadcrumbCoursename {
+	float:right;
+	margin-right: 1em;
+	font-weight:bold;
+	margin-bottom:-2em;
+}
+
+
+/* Remove the Syllabus tool from left nav and Settings->Navigation */
+li.section a.syllabus {
+	display: none;
+}
+li[aria-label="Syllabus"] {
+	display: none !important;
+}
+/* Remove the Attendance tool from left nav and Settings->Navigation */
+li.section a.context_external_tool_8 {
+	display: none;
+}
+li[aria-label="Attendance"] {
+	display: none !important;
+}
+
+/* modules page fixes */
+
+/*indenting in draft state so
+the intdent includes the icon */
+li.context_module_item.indent_1 .type_icon {
+	margin-left: 20px;
+	padding-right: 0px;
+}
+li.context_module_item.indent_2 .type_icon {
+	margin-left: 40px;
+	padding-right: 0px;
+}
+li.context_module_item.indent_3 .type_icon {
+	margin-left: 60px;
+	padding-right: 0px;
+}
+/* smaller line height */
+/*  this was messing up display when there were completion
+requirements, such as sequencing. The reduced height was casusing the text
+to overlap. Let''s try not selector*/
+/*div.ig-row.ig-published.student-view:not(.with-completion-requirements) {
+	height: 2.5em;
+}*/
+/* non-text headings in modules not bolded */
+.ig-title .item_name .title {
+	font-weight: normal;
+}
+
+/* bold and background shade the text headers */
+.context_module_sub_header .ig-row {
+	background-color: #cccccc;
+	font-weight:bold;
+}
+.context_module_sub_header .ig-row:hover {
+	background-color: #aaaaaa;
+}
+.context_module_sub_header .ig-row .title {
+	font-weight:bold;
+}
+
+/* more indent equals smaller text */
+li.context_module_item.indent_1 .title {
+	font-size: 100%;
+}
+li.context_module_item.indent_2 .title {
+	font-size: 95%;
+}
+li.context_module_item.indent_3 .title {
+	font-size: 90%;
+}
+
+/* remove points possible for student view */
+.ig-row.student-view .points_possible_display {
+	display: none;
+}
+
+/* Fix for ellipsis gradient problem in Firefox, 11/3/15 */
+body.ff .ig-list .ig-row .ellipses::after, body.ff .ig-list .ig-row .ellipsis::after {
+	height: 0px;
+}
+
+/* END MODULES PAGE  */
+
+/* Padding for images in WIKI pages */
+#wiki_body img {
+    padding: 5px;
+}
+img.pad {
+    padding: 5px;
+}
+/* Make Prism.js code highlighting never word-wrap if line-numbers are used  */
+pre.line-numbers {
+		word-wrap: normal;
+}
+
+/* Make Accordion work using styles copied from styleguide */
+.styleguide-section__accordion-demo-element, .accordion-element {
+padding: 24px;
+color: #333333;
+}
+
+/* Hide Assignments top menu item */
+li#assignments_menu_item{ display: none;}
+
+/* Add icon to "dicussions" left nav item */
+/* li.section > a.discussions {
+    background: url("https://content.neit.edu/css/favicon32x32.jpg") no-repeat scroll 1px 4px / 12% auto rgba(0, 0, 0, 0);
+    padding-left: 2em;
+} */
+/* Make Module Headings different color */
+#context_modules_sortable_container * .context-module-header {
+     /* background-color: #393633;
+    color: #FCCE7B; */
+    background-color: #ddd;
+    color: #000;
+}
+
+/*  Kaltura Warning */
+.kalturaWarning{
+	color: red;
+	border: 1px solid #ccc;
+	padding: 1em;
+}
+
+
+/* HIDE THE CANVAS MEDIA BUTTON IN THE RTE */
+/*  CHANGE - no longer hidden. JS changes the icon to a microphone and the titie popup to 'Record Audio'
+ *  The video upload parts of the Canvas media widget are also hidden with JS
+ *  so that they only hide on RTE pages, not in SpeedGrader or Submit Media Assignment screens */
+a.mce_instructure_record {
+	/*display: none !important;*/
+}
+
+div.question a.mce_instructure_record{
+	display:none !important;
+}
+.hideImportant{
+	display:none !important;
+}
+
+/* #topbar:after {
+content: url(https://technet.neit.edu/images/semesterweek.png);
+margin-left: 50em;
+margin-top: 4em;
+position: relative;
+top: -2px;
+} */
+/*#header:after{
+	content: url(https://technet.neit.edu/images/semesterweek.png);
+	margin-top: -30px;
+	top: -10px;
+	float: right;
+}
+#header.no-user:after {
+    margin-top: 15px;
+}
+#header.no-user #header-logo {
+    top: 0;
+}*/
+/* update the color behind the user settings manu 
+#identity{
+	background-color: #4e697e;
+}
+*/
+/*if you replace the left canvas logo, move a smaller one to the right side of the header--I made the image gray first
+#header-logo-secondary {
+  background: no-repeat scroll 0 0 transparent;
+  bottom: 11px;
+  height: 26;
+  position: absolute;
+  right: 26px;
+  width: 135px;
+  display: block;
+}
+*/
+
+/* reduce the sizeof the global nav logo */
+.ic-app-header__logomark{
+	height: 50px;
+}
+/*  DASHBOARD PAGE TWITTER BOX  - THIS IS THE PLATFORM DASHBOARD, NOT THE COURSE DASHBOARD. INSERTED VIA GLOBAL JS*/
+.dashboardTwitter{
+	float:right;
+}
+
+
+/* LOGIN PAGE */
+body.modal #modal-box.login-box{
+	background: url("https://content.neit.edu/css/loginbkg2.png") no-repeat scroll -14px 0 #012749;
+}
+body.modal #modal-box.login-box h1, body.modal #modal-box.login-box .h1{
+	background:none;
+}
+
+#login_forgot_password{display:none;}
+
+/*  This is for the MGT and MGM course homepages
+
+*/
+.mgmNavBar {
+	margin-top: -10px;
+}
+div.mgmStartNav{
+    position: relative;
+    /*height:165px;
+    width:200px;*/
+    -webkit-border-bottom-right-radius: 12px;
+    -moz-border-radius-bottomright: 12px;
+    border-bottom-right-radius: 12px;
+    background-color: #012749;
+    color: white;
+    text-transform: uppercase;
+    display: inline-block;
+    padding:10px 50px 10px 50px;
+    font-family: arial, helvetica, sans-serif;
+    margin-right:5px;
+    font-size: 130%;
+    margin-bottom: 1px;
+}
+div.mgmStartNav a{
+	color:white;
+}
+div.mgmFacLine{
+    margin-top:12px;
+	font-size: 140%;
+}
+.mgmFacLine span {
+    font-size: 80%;
+    font-family: arial, sans-serif;
+    letter-spacing: 1px;
+    margin-right: .5em;
+    padding-right: .5em;
+}
+span.mgmFacName, span.mgmFacEmail {
+    border-right: 1px solid black;
+}
+
+/* For the Learning Online at NEIT home page nav
+https://neit.instructure.com/courses/20944/
+*/
+
+	/* This section is for the table of contents page */
+		#learningonlinenav .olnavbar  {
+            border-bottom-right-radius: 25px;
+            background: #8AC007;
+            padding: 20px;
+            min-width: 100px;
+            max-width: 500px;
+            height: 35px;
+            margin: 1.5em;
+            position: relative;
+
+        }
+        #learningonlinenav .olnavlabel{
+            width:100%;
+            font-family: arial,sans-serif;
+            margin-left:4em;
+        }
+        #learningonlinenav .olnavlabel-title{
+            font-size: 170%;
+        }
+        #learningonlinenav .olnavlabel-title a {
+            color: rgb(95, 74, 35);
+          }
+		#learningonlinenav .olnavlabel-text{
+            font-size: 110%;
+        }
+        #learningonlinenav .olnavicon img{
+            width:80px;
+
+        }
+        #learningonlinenav .olnavicon{
+            top: -12px;
+            left: -20px;
+            position: absolute;}
+
+	/* This section is for the in-page nav stuff */
+		#learningonlinepagenav .olnavbar  {
+            border-bottom-right-radius: 15px;
+            background: #BBB;
+            padding: 15px;
+            min-width: 75px;
+            max-width: 123px;
+            height: 15px;
+            margin: 0.5em;
+            position: relative;
+            display: inline-block;
+			font-size: 90%;
+        }
+
+        #learningonlinepagenav .olnavlabel{
+            width:100%;
+            font-family: arial,sans-serif;
+            margin-left:1.3em;
+        }
+        #learningonlinepagenav .olnavlabel-title{
+            font-size: 100%;
+        }
+        #learningonlinepagenav .olnavlabel-title a {
+            color: rgb(95, 74, 35);
+          }
+        #learningonlinepagenav .olnavlabel-text{
+            display:none;
+        }
+        #learningonlinepagenav .olnavicon img{
+            width:36px;
+
+        }
+        #learningonlinepagenav .olnavbar .olnavicon{
+              top: -5px;
+              left: -9px;
+              position: absolute;
+        }
+		#learningonlinepagenav .pill a {
+			color: black;
+		}
+        #learningonlinenav .olnavclassroom, #learningonlinepagenav .olnavclassroom.selected, .pill.olnavclassroom{
+            background-color:#db827a;
+        }
+        #learningonlinenav .olnavfindcourses, #learningonlinepagenav .olnavfindcourses.selected, .pill.olnavfindcourses{
+            background-color:#efc37b;
+        }
+        #learningonlinenav .olnavinsidecourse,#learningonlinepagenav .olnavinsidecourse.selected, .pill.olnavinsidecourse{
+            background-color:#a4bcba;
+        }
+        #learningonlinenav .olnavgetrhythm,#learningonlinepagenav .olnavgetrhythm.selected, .pill.olnavgetrhythm{
+            background-color:#86aa8a;
+        }
+        #learningonlinenav .olnavcheckinoften, #learningonlinepagenav .olnavcheckinoften.selected, .pill.olnavcheckinoften{
+            background-color:#f1cfb6;
+        }
+        #learningonlinenav .olnavdontstaystuck,#learningonlinepagenav .olnavdontstaystuck.selected, .pill.olnavdontstaystuck{
+            background-color:#b9865c;
+        }
